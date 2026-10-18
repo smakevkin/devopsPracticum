@@ -77,6 +77,11 @@ services:
     volumes:
       - grafdata:/var/lib/grafana
       - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     networks: [monitoring]
 
 volumes:
