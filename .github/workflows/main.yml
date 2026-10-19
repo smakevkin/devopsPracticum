@@ -36,7 +36,23 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - run: docker compose --env-file compose/.env.example -f compose/docker-compose.yml config -q
+    
+    test-terraform:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: terraform
+        steps:
+            - uses: actions/checkout@v4
+            - uses: hashicorp/setup-terraform@v4
+              with:
+                terraform_version: "1.16.6"
+            - run: ssh-keygen -t ed25519 -C "GITHUB ACTIONS"
+            - run: terraform fmt -check -recursive
+            - run: terraform init -backend=false
+            - run: terraform validate
 
+    
     build:
         needs: [lint, test, test-compose]
         runs-on: ubuntu-latest
