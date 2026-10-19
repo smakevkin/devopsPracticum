@@ -31,13 +31,13 @@ resource "docker_container" "server" {
   restart       = "unless-stopped"
 
   networks_advanced {
-  name = "bridge"
-}
-# использовать с docker, иначе падает
-# networks_advanced {
-#  name    = "compose_monitoring"
-#  aliases = ["server"]
-#}
+    name = "bridge"
+  }
+  # использовать с docker, иначе падает
+  # networks_advanced {
+  #  name    = "compose_monitoring"
+  #  aliases = ["server"]
+  #}
 
   ports {
     internal = 22
