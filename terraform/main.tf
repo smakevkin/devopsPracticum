@@ -29,6 +29,16 @@ resource "docker_container" "server" {
   privileged    = true
   cgroupns_mode = "host"
   restart       = "unless-stopped"
+
+  networks_advanced {
+  name = "bridge"
+}
+
+networks_advanced {
+  name    = "compose_monitoring"
+  aliases = ["server"]
+}
+
   ports {
     internal = 22
     external = var.ssh_port
