@@ -1,0 +1,12 @@
+[Unit]
+Description=Python app
+After=network.target
+
+[Service]
+User=app
+WorkingDirectory=/app/
+ExecStart=/app/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

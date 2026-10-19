@@ -1,0 +1,86 @@
+---
+- name: Вариант развертывания приложения не через Docker(но нету бд)
+  hosts: local
+  become: true
+  tasks:
+    - name: Установить зависимости
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - prometheus-node-exporter
+          - python3-packaging
+          - python3-venv
+        state: present
+        update_cache: true
+    - name: Создать пользователя
+      ansible.builtin.user:
+        name: app
+        uid: 10001
+        create_home: true
+        shell: /usr/sbin/nologin
+    - name: Создать директорию под приложение
+      ansible.builtin.file:
+        path: /app
+        owner: app
+        state: directory
+        mode: "755"
+    - name: Скопировать файлы приложения
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "644"
+      loop:
+        - src: ../app/main.py
+          dest: /app/main.py
+        - src: ../app/requirements.txt
+          dest: /app/requirements.txt
+    - name: Создать venv и установить зависимости
+      ansible.builtin.pip:
+        requirements: /app/requirements.txt
+        virtualenv: "/app/venv"
+        virtualenv_command: /usr/bin/python3 -m venv
+    - name: Сделать systemd сервис
+      ansible.builtin.template:
+        src: ./app.j2
+        dest: /etc/systemd/system/app.service
+        mode: "0644"
+        owner: root
+    - name: Запустить systemd сервис
+      ansible.builtin.systemd:
+        name: "app"
+        state: started
+        enabled: true
+        daemon_reload: true
+    - name: Настроить nginx
+      block:
+        - name: Добавить конфиг
+          ansible.builtin.template:
+            src: ./nginx.j2
+            dest: /etc/nginx/sites-available/app
+            owner: root
+            mode: "644"
+        - name: Сделать сим ссылку на конфиг
+          ansible.builtin.file:
+            path: /etc/nginx/sites-enabled/app
+            src: /etc/nginx/sites-available/app
+            state: link
+        - name: Удалить дефолт конфиг
+          ansible.builtin.file:
+            path: /etc/nginx/sites-enabled/default
+            state: absent
+    - name: Запустить nginx и node-exporter
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - nginx
+        - prometheus-node-exporter
+    - name: Проверить что все работает
+      ansible.builtin.uri:
+        url: http://127.0.0.1/health
+        status_code: 200
+      register: healthcheck
+      retries: 10
+      delay: 2
+      until: healthcheck.status == 200
