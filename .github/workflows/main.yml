@@ -47,7 +47,7 @@ jobs:
             - uses: hashicorp/setup-terraform@v4
               with:
                 terraform_version: "1.16.6"
-            - run: ssh-keygen -t ed25519 -C "GITHUB ACTIONS"
+            - run: mkdir -p ~/.ssh && ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 -C "GITHUB ACTIONS"
             - run: terraform fmt -check -recursive
             - run: terraform init -backend=false
             - run: terraform validate
@@ -70,10 +70,18 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
+            - id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ghcr.io/smakevkin/devopspracticum
+                  tags: |
+                      type=ref,event=branch
+                      type=ref,event=pr
+                      type=sha
+ 
             - uses: docker/build-push-action@v6
               with:
                   context: ./app
                   push: ${{ github.event_name != 'pull_request' }}
-                  tags: |
-                      ghcr.io/smakevkin/devopspracticum:${{ github.ref_name }}
-                      ghcr.io/smakevkin/devopspracticum:${{ github.sha }}
+                  tags: ${{ steps.meta.outputs.tags }}
+
