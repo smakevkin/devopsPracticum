@@ -33,11 +33,11 @@ resource "docker_container" "server" {
   networks_advanced {
   name = "bridge"
 }
-
-networks_advanced {
-  name    = "compose_monitoring"
-  aliases = ["server"]
-}
+# использовать с docker, иначе падает
+# networks_advanced {
+#  name    = "compose_monitoring"
+#  aliases = ["server"]
+#}
 
   ports {
     internal = 22
