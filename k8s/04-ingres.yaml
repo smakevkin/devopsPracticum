@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pyapp
+  namespace: pyapp
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /visit
+            pathType: Exact
+            backend:
+              service:
+                name: pyapp
+                port:
+                  name: http
